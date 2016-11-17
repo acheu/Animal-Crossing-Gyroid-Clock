@@ -1,18 +1,17 @@
 from datetime import datetime
-import subprocess
-import pyowm
-import os
-from time import sleep
-from socket import error as SocketError
-import errno
-import random
 from enum import Enum
+from socket import error as SocketError
+from time import sleep
+import os
+import pyowm
+import random
+import subprocess
 
 
 class Weather(Enum):
-    RAIN = 'rain'
-    SNOW = 'snow'
-    NONE = 'none'
+    RAIN = 'rain_hour/'
+    SNOW = 'snow_hour/'
+    NONE = 'hour/'
 
 
 class Festival(Enum):
@@ -38,33 +37,36 @@ class ACS(Enum):
 def main():
     musicloc = 'Music/'  # Location of the Musics folder with all the sounds
     cycle = 10  # Seconds for Checking
+    cts_play = True  # True for continuous play
     allowAlbums = [ACS.NEWLEAF, ACS.CITYFOLK]
     bootupSong(musicloc)
     dto = datetime.now()
     oldHour = dto.hour  # Starts with boot
-    checkWeather = False
+    lastcheckWeather = False
     isWeather = Weather.NONE
     isFestival = Festival.NONE
-    while 1:
+    while 1:  # Infinite Main Loop
         dt = datetime.now()
         hour = dt.hour
         # Check weather before the hour to allow time for API call
-        if dt.minute > 55 and checkWeather is False:
+        if dt.minute > 55 and lastcheckWeather is False:
             # Checks Weather, returns 'none', 'snow', or 'rain'
             isWeather = checkWeather()
-            checkWeather = True
-        # if oldHour != hour:
-        if 1:
-            album = random.choice(allowAlbums)
-            songloc = musicloc + album.value + '/'
-            # Checks for festivals like Christmas, KK, etc
-            isFestival = checkFestival()
-            print 'Weather is: ' + isWeather.value
-            print 'Festival is: ' + isFestival.value
-            played = playMusic(songloc, hour, isWeather, isFestival)
-            if played:  # If opening the file was successfully called
-                oldHour = hour
-                checkWeather = False
+            lastcheckWeather = True
+        if oldHour != hour or cts_play:
+            played = False
+            while not played:
+                # Keep choosing songs until something plays
+                album = random.choice(allowAlbums)
+                songloc = musicloc + album.value + '/'
+                # Checks for festivals like Christmas, KK, etc
+                isFestival = checkFestival(dt)
+                print 'Weather is: ' + isWeather.value
+                print 'Festival is: ' + isFestival.value
+                played = playMusic(songloc, hour, isWeather, isFestival)
+                # If song did not play, new song will be chosen
+            oldHour = hour
+            lastcheckWeather = False
         sleep(cycle)  # Sleep 10 Seconds
 
 
@@ -87,12 +89,8 @@ def playMusic(file_loc, hour, isWeather, isFestival):
         # Chance arbitrarly set at 5% if etcCheck passes
         if random.randint(0, 100) < 5 and etcCheck:
             musicFile = etcfol + random.choice(os.listdir(etcfol))
-        elif isWeather == Weather.RAIN:
-            musicFile = file_loc + 'rain_hour/' + str(hour) + '.mp3'
-        elif isWeather == Weather.SNOW:
-            musicFile = file_loc + 'snow_hour/' + str(hour) + '.mp3'
         else:
-            musicFile = file_loc + 'hour/' + str(hour) + '.mp3'
+            musicFile = file_loc + isWeather.value + str(hour) + '.mp3'
     print musicFile
     # Double check if file exists
     if os.path.exists(musicFile):
@@ -121,37 +119,37 @@ def checkWeather():
         print 'Socket Closed Error'
         status = Weather.NONE
         return status
-    if status == 'Drizzle' or status == 'Thunderstorm' or status == 'Rain':
+    if status in ['Drizzle', 'Thunderstorm', 'Rain']:
         return Weather.RAIN
     elif status == 'Snow':
         return Weather.SNOW
     else:
         return Weather.NONE
 
-def checkFestival():
-    dt = datetime.now()
+
+def checkFestival(dt):
     weekday = dt.weekday()  # Returns 0-6 for Day of the Week
     month = dt.month
     day = dt.day
     hour = dt.hour
-    holiday = Festival.NONE
     # Check for Halloween, Christmas and ...
     if day == 25 and month == 12:
         # It's Festival
-        holiday = Holiday.TOYDAY
+        return Festival.TOYDAY
     elif day == 31 and month == 10:
         # It's Halloween
-        holiday = Festival.HALLOWEEN
+        return Festival.HALLOWEEN
     elif weekday == 5 and hour > 20:
         # KK Slider
-        holiday = Festival.KKSLIDER
+        return Festival.KKSLIDER
     elif day == 31 and month == 12:
-        holiday = Festival.NEWYEARSEVE
+        return Festival.NEWYEARSEVE
     elif day == 1 and month == 1:
-        holiday = Festival.NEWYEAR
+        return Festival.NEWYEAR
     elif day == 4 and month == 7:
-        holiday = Festival.FIREWORKS
-    return holiday
+        return Festival.FIREWORKS
+    else:
+        return Festival.NONE
 
 
 if __name__ == "__main__":
