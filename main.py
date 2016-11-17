@@ -24,6 +24,7 @@ class Festival(Enum):
     HARVESTFESTIVAL = 'harvest festival'
     BUNNYDAY = 'bunny day'
     NEWYEAR = 'new year'
+    NEWYEARSEVE = 'new years eve'
     NONE = 'none'
 
 
@@ -38,7 +39,7 @@ def main():
     musicloc = 'Music/'  # Location of the Musics folder with all the sounds
     cycle = 10  # Seconds for Checking
     allowAlbums = [ACS.NEWLEAF, ACS.CITYFOLK]
-    # bootupSong(musicloc)
+    bootupSong(musicloc)
     dto = datetime.now()
     oldHour = dto.hour  # Starts with boot
     checkWeather = False
@@ -104,9 +105,8 @@ def playMusic(file_loc, hour, isWeather, isFestival):
 
 def bootupSong(file_loc):
     file_loc = file_loc + 'Menu/'
-    start_song = 'Train_Departure.mp3'
-    song = file_loc + start_song
-    subprocess.Popen(['mpg123', '-q', song]).wait()
+    start_song = file_loc + random.choice(os.listdir(file_loc))
+    subprocess.Popen(['mpg123', '-q', start_song]).wait()
 
 
 def checkWeather():
@@ -128,7 +128,6 @@ def checkWeather():
     else:
         return Weather.NONE
 
-
 def checkFestival():
     dt = datetime.now()
     weekday = dt.weekday()  # Returns 0-6 for Day of the Week
@@ -146,6 +145,12 @@ def checkFestival():
     elif weekday == 5 and hour > 20:
         # KK Slider
         holiday = Festival.KKSLIDER
+    elif day == 31 and month == 12:
+        holiday = Festival.NEWYEARSEVE
+    elif day == 1 and month == 1:
+        holiday = Festival.NEWYEAR
+    elif day == 4 and month == 7:
+        holiday = Festival.FIREWORKS
     return holiday
 
 
