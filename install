@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# Open Weather Map for weather
+# Must obtain API Key from website
+pip install pyowm
+
+apt-get install mpg123
+
+source venv/bin/activate
+deactivate
+
+#pip install pyyaml
