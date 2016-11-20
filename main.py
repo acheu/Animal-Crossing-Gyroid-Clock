@@ -29,7 +29,6 @@ class Festival(Enum):
 
 class ACS(Enum):
     NEWLEAF = 'New Leaf'
-    WILDWORLD = 'Wild World'
     ORIGINAL = 'Oirginal'
     CITYFOLK = 'City Folk'
 
@@ -63,14 +62,14 @@ def main():
                 isFestival = checkFestival(dt)
                 print 'Weather is: ' + isWeather.value
                 print 'Festival is: ' + isFestival.value
-                played = playMusic(songloc, hour, isWeather, isFestival)
+                played = playMusic(songloc, hour, isWeather, isFestival, cts_play)
                 # If song did not play, new song will be chosen
             oldHour = hour
             lastcheckWeather = False
         sleep(cycle)  # Sleep 10 Seconds
 
 
-def playMusic(file_loc, hour, isWeather, isFestival):
+def playMusic(file_loc, hour, isWeather, isFestival, cts):
     # Check festival first, then check weather
     if isFestival != Festival.NONE:
         if isFestival == Festival.KKSLIDER:
@@ -86,8 +85,8 @@ def playMusic(file_loc, hour, isWeather, isFestival):
         etcCheck = False
         if os.path.isdir(etcfol) and len(os.listdir(etcfol)) > 0:
             etcCheck = True
-        # Chance arbitrarly set at 5% if etcCheck passes
-        if random.randint(0, 100) < 5 and etcCheck:
+        # Chance arbitrarly set at 10% if etcCheck passes
+        if (random.randint(0, 100) < 10 and etcCheck) or (cts and random.randint(0, 100) < 40):
             musicFile = etcfol + random.choice(os.listdir(etcfol))
         else:
             musicFile = file_loc + isWeather.value + str(hour) + '.mp3'
@@ -102,12 +101,14 @@ def playMusic(file_loc, hour, isWeather, isFestival):
 
 
 def bootupSong(file_loc):
+    # Plays a random song in the Menu folder
     file_loc = file_loc + 'Menu/'
     start_song = file_loc + random.choice(os.listdir(file_loc))
     subprocess.Popen(['mpg123', '-q', start_song]).wait()
 
 
 def checkWeather():
+    # Python Open Weather Map
     # City Hardcoded into this. Can change later with API call
     city = 'Atlanta,us'
     try:
@@ -132,6 +133,9 @@ def checkFestival(dt):
     month = dt.month
     day = dt.day
     hour = dt.hour
+    #date = str(datetime.date.today())
+    #print date
+    carnivale_dates = []
     # Check for Halloween, Christmas and ...
     if day == 25 and month == 12:
         # It's Festival
@@ -150,7 +154,14 @@ def checkFestival(dt):
         return Festival.FIREWORKS
     else:
         return Festival.NONE
-
+#27th February 2017
+#12th February 2018
+#4th March 2019
+#24th February 2020
+#15th February 2021
+#28th February 2022
+#20th February 2023
+#12th February 2024 
 
 if __name__ == "__main__":
     main()

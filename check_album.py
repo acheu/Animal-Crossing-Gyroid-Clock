@@ -28,21 +28,23 @@ def main():
     folder_error_msg = []
     all_error = []
     if not os.path.isdir(album):
-        print 'Error, Album does not exit'
+        all_error.append(['ERROR: Album does not exit'])
     else:
         folder_error_msg = check_folders(album, checkfor)
-    all_error.append(folder_error_msg)
-    # print folder_error_msg
-    for i, fol in enumerate(checkfor):
-        if folder_error_msg[i] is None:
-            msg = check_songs(fol, album + fol + '/')
-            all_error.append(msg)
-    # Print all error messages
-
+        all_error.append(folder_error_msg)
+        # print folder_error_msg
+        for i, fol in enumerate(checkfor):
+            if folder_error_msg[i] is None:
+                msg = check_songs(fol, album + fol + '/')
+                all_error.append(msg)
+        # Print all error messages
     all_error = list(chain.from_iterable(all_error))
+    print '*************************'
     for i in all_error:
         if i:
             print i
+    print '*************************'
+
 
 def check_songs(fol, loc):
     err_msg = []
