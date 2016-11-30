@@ -50,12 +50,18 @@ def main():
         dt = datetime.now()
         hour = dt.hour
         minute = dt.minute
+        # play_check code:
+        # 1: Cts Play
+        # 2: Play the Top of the Hour
+        # 3: Play the bottom of the Hour
+        # 4 onwards: Not yet used
         if cts_play:
             play_check = 1
         elif oldHour != hour:
             play_check = 2
-        elif minute > 30 and play_check == 2:
+        elif minute == 30:
             play_check = 3
+            # Assumption: That cycle is < 60s and that a song length is >60s
         if play_check > 0:
             if dt.minute > 55 and lastcheckWeather is False:
                 # Checks Weather, returns 'none', 'snow', or 'rain'
