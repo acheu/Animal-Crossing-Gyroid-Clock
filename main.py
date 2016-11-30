@@ -36,33 +36,43 @@ class ACS(Enum):
 def main():
     musicloc = 'Music/'  # Location of the Musics folder with all the sounds
     cycle = 10  # Seconds for Checking
-    cts_play = True  # True for continuous play
-    allowAlbums = [ACS.NEWLEAF, ACS.CITYFOLK]
+    cts_play = False  # True for continuous play
+    allow_albums = [ACS.NEWLEAF, ACS.CITYFOLK]
     bootupSong(musicloc)
     dto = datetime.now()
     oldHour = dto.hour  # Starts with boot
     lastcheckWeather = False
     isWeather = Weather.NONE
     isFestival = Festival.NONE
+    day_check = []  # Assumption: There'll never be a day []
+    play_check = 0
     while 1:  # Infinite Main Loop
         dt = datetime.now()
         hour = dt.hour
-        # Check weather before the hour to allow time for API call
-        if dt.minute > 55 and lastcheckWeather is False:
-            # Checks Weather, returns 'none', 'snow', or 'rain'
-            isWeather = checkWeather()
-            lastcheckWeather = True
-        if oldHour != hour or cts_play:
+        minute = dt.minute
+        if cts_play:
+            play_check = 1
+        elif oldHour != hour:
+            play_check = 2
+        elif minute > 30 and play_check == 2:
+            play_check = 3
+        if play_check > 0:
+            if dt.minute > 55 and lastcheckWeather is False:
+                # Checks Weather, returns 'none', 'snow', or 'rain'
+                isWeather = checkWeather()
+                lastcheckWeather = True
+            if day_check != dt.day:
+                # Checks for festivals like Christmas, KK, etc
+                isFestival = checkFestival(dt)
+                day_check = dt.day
             played = False
             while not played:
                 # Keep choosing songs until something plays
-                album = random.choice(allowAlbums)
+                album = random.choice(allow_albums)
                 songloc = musicloc + album.value + '/'
-                # Checks for festivals like Christmas, KK, etc
-                isFestival = checkFestival(dt)
-                print 'Weather is: ' + isWeather.value
+                print 'Play Hour is: ' + isWeather.value
                 print 'Festival is: ' + isFestival.value
-                played = playMusic(songloc, hour, isWeather, isFestival, cts_play)
+                played = playMusic(songloc, hour, isWeather, isFestival, play_check)
                 # If song did not play, new song will be chosen
             oldHour = hour
             lastcheckWeather = False
@@ -70,7 +80,7 @@ def main():
 
 
 def playMusic(file_loc, hour, isWeather, isFestival, cts):
-    # Check festival first, then check weather
+    """Check festival first, then check weather"""
     if isFestival != Festival.NONE:
         if isFestival == Festival.KKSLIDER:
             musicFile = 'Music/KK/'
@@ -86,7 +96,7 @@ def playMusic(file_loc, hour, isWeather, isFestival, cts):
         if os.path.isdir(etcfol) and len(os.listdir(etcfol)) > 0:
             etcCheck = True
         # Chance arbitrarly set at 10% if etcCheck passes
-        if (random.randint(0, 100) < 10 and etcCheck) or (cts and random.randint(0, 100) < 40):
+        if (etcCheck and ((random.randint(0, 100) < 10) and cts == 1)) or cts == 3:
             musicFile = etcfol + random.choice(os.listdir(etcfol))
         else:
             musicFile = file_loc + isWeather.value + str(hour) + '.mp3'
@@ -101,14 +111,14 @@ def playMusic(file_loc, hour, isWeather, isFestival, cts):
 
 
 def bootupSong(file_loc):
-    # Plays a random song in the Menu folder
+    """Plays a random song in the Menu folder"""
     file_loc = file_loc + 'Menu/'
     start_song = file_loc + random.choice(os.listdir(file_loc))
     subprocess.Popen(['mpg123', '-q', start_song]).wait()
 
 
 def checkWeather():
-    # Python Open Weather Map
+    """Python Open Weather Map"""
     # City Hardcoded into this. Can change later with API call
     city = 'Atlanta,us'
     try:
@@ -129,39 +139,40 @@ def checkWeather():
 
 
 def checkFestival(dt):
+    """Checks festival dates"""
     weekday = dt.weekday()  # Returns 0-6 for Day of the Week
     month = dt.month
     day = dt.day
     hour = dt.hour
-    #date = str(datetime.date.today())
-    #print date
-    carnivale_dates = []
+    date = str(dt.date())
+    carnivale_dates = ['2017-2-27','2018-2-12','2019-3-4','2020-2-24','2021-3-15','2022-2-28']
+    bunnyday_dates = []
+    harvest_dates = ['2016-11-24']
+    festival = Festival.NONE
     # Check for Halloween, Christmas and ...
+    
     if day == 25 and month == 12:
         # It's Festival
-        return Festival.TOYDAY
+        festival = Festival.TOYDAY
     elif day == 31 and month == 10:
         # It's Halloween
-        return Festival.HALLOWEEN
+        festival = Festival.HALLOWEEN
     elif weekday == 5 and hour > 20:
-        # KK Slider
-        return Festival.KKSLIDER
+        #  Slider
+        festival = Festival.KKSLIDER
     elif day == 31 and month == 12:
         return Festival.NEWYEARSEVE
     elif day == 1 and month == 1:
-        return Festival.NEWYEAR
+        festival = Festival.NEWYEAR
     elif day == 4 and month == 7:
-        return Festival.FIREWORKS
+        festival = Festival.FIREWORKS
+    elif date in carnivale_dates:
+        festival = Festival.CARNIVALE
+    elif date in harvest_dates:
+        festival = Festival.HARVESTFESTIVAL
     else:
-        return Festival.NONE
-#27th February 2017
-#12th February 2018
-#4th March 2019
-#24th February 2020
-#15th February 2021
-#28th February 2022
-#20th February 2023
-#12th February 2024 
+        festival = Festival.NONE
+    return festival
 
 if __name__ == "__main__":
     main()
