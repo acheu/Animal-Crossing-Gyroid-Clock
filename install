@@ -4,9 +4,11 @@
 # Must obtain API Key from website
 pip install pyowm
 
-apt-get install mpg123
+#apt-get install mpg123
 
 source venv/bin/activate
 deactivate
 
-#pip install pyyaml
+pip install pyyaml
+
+sudo apt-get install python-pygame

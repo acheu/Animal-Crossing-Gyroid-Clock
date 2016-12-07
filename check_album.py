@@ -2,7 +2,9 @@ import os
 from itertools import chain
 from enum import Enum
 
+
 class Festival(Enum):
+    """Festivals allowed by the clock"""
     TOYDAY = 'toy day'
     HALLOWEEN = 'halloween'
     FIREWORKS = 'fireworks'
@@ -15,13 +17,8 @@ class Festival(Enum):
     NONE = 'none'
 
 
-class ACS(Enum):
-    NEWLEAF = 'New Leaf'
-    ORIGINAL = 'Oirginal'
-    CITYFOLK = 'City Folk'
-
-
 def main():
+    """Check to make sure Album for Animal Crossing Gyroid Clock works"""
     album = raw_input('Enter Album you want to check: /Music/')
     album = 'Music/' + album.split('/')[0] + '/'
     checkfor = ['hour', 'snow_hour', 'rain_hour', 'festival', 'etc']
@@ -47,6 +44,7 @@ def main():
 
 
 def check_songs(fol, loc):
+    """Iterate check through songs given folder"""
     err_msg = []
     if fol is 'etc':
         lists = os.listdir(loc)
@@ -59,14 +57,14 @@ def check_songs(fol, loc):
     else:
         # We are now checking an 'hours' folder, ie snow_hour, hour, rain_hour
         for i in range(0, 23):
-            f = loc + str(i) + '.mp3' 
-            if not os.path.isfile(f):
-                err_msg.append('ERROR: Missing file: ' + f)
+            song_f = loc + str(i) + '.mp3'
+            if not os.path.isfile(song_f):
+                err_msg.append('ERROR: Missing file: ' + song_f)
     return err_msg
-        
-    
+
 
 def check_folders(album_loc, checkfor):
+    """Iterate check through folders"""
     dirs = os.listdir(album_loc)
     error_msg = [None] * (len(checkfor) + 1)
     for i, fol in enumerate(checkfor):
