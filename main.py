@@ -8,8 +8,7 @@ import random
 import subprocess
 import pygame
 import config
-import yaml
-
+from csv import reader as csvreader
 
 class Weather(Enum):
     RAIN = 'rain_hour/'
@@ -18,26 +17,35 @@ class Weather(Enum):
 
 
 class Festival(Enum):
-    TOYDAY = 'toy day'
-    HALLOWEEN = 'halloween'
-    FIREWORKS = 'fireworks'
+    TOYDAY = 'toy day/'
+    HALLOWEEN = 'halloween/'
+    FIREWORKS = 'fireworks/'
     KKSLIDER = 'kk slider'
-    CARNIVALE = 'carnivale'
-    HARVESTFESTIVAL = 'harvest festival'
-    BUNNYDAY = 'bunny day'
-    NEWYEAR = 'new year'
-    NEWYEARSEVE = 'new years eve'
+    CARNIVALE = 'carnivale/'
+    HARVESTFESTIVAL = 'harvest festival/'
+    BUNNYDAY = 'bunny day/'
+    NEWYEAR = 'new year/'
+    NEWYEARSEVE = 'new years eve/'
     NONE = 'none'
+
+
+# Global Constants
+FREQ = 44100
+#FREQ = 32000
+BITSIZE = -16
+CHANNELS = 2
+BUFFER = 4096
+
 
 def main():
     musicloc = 'Music/'  # Location of the Musics folder with all the sounds
-    cycle = 10  # Seconds for Checking
-    cts_play = False  # True for continuous play
+    cycle = 3  # Seconds for Checking
+    cts_play = True  # True for continuous play
     allow_albums = config.albums_allowable
     print 'Loaded in: ' + str(config.albums_allowable)
-    pygame.mixer.init(frequency=44000, size=-16, channels=2, buffer=4096)
+    pygame.mixer.init(FREQ, BITSIZE, CHANNELS, BUFFER)
     pygame.init()
-    bootupSong(musicloc)
+    # bootupSong()
     dto = datetime.now()
     oldHour = dto.hour  # Starts with boot
     lastcheckWeather = False
@@ -49,28 +57,7 @@ def main():
         dt = datetime.now()
         hour = dt.hour
         minute = dt.minute
-        # play_check code:
-        # 1: Cts Play
-        # 2: Play the Top of the Hour
-        # 3: Play the bottom of the Hour
-        # 4: Ring bell toll
-        # 5: onwards: Not yet used
-        if cts_play:
-            if oldHour != hour:
-                play_check = 4
-            else:
-                play_check = 1
-        else:
-            if oldHour != hour:
-                if config.hrly_preferences['ring_bell']:
-                    play_check == 4
-                else:
-                    play_check = 2
-            elif minute == 30:
-                play_check = 3
-            else:
-                play_check = 0
-            # Assumption: That cycle is < 60s and that a song length is >60s
+        play_check = check_play_triggers(cts_play, oldHour, False)
         if play_check > 0:
             if dt.minute > 55 or not lastcheckWeather:
                 # Checks Weather, returns 'none', 'snow', or 'rain'
@@ -85,25 +72,128 @@ def main():
                 # Keep choosing songs until something plays
                 album = random.choice(allow_albums)
                 songloc = musicloc + album + '/'
-                #played = chooseMusic_Flexible(songloc, hour, isWeather, isFestival)
-                played = chooseMusic_Rigid(songloc, hour, isWeather, isFestival, play_check)
+                check_rigid = True
+                with open(songloc + 'album_config.txt') as cf_file:
+                    commands = []
+                    read = csvreader(cf_file, delimiter='=', quotechar='|')
+                    for i in read:
+                        if 'rigid' in i[0]:
+                            check_rigid = i[1].strip()
+                # FIX ME: A bit of a janky way of implementing album prefs
+                if check_rigid == 'True':
+                    played = chooseMusic_Rigid(songloc, hour, isWeather, isFestival, play_check)
+                else:
+                    played = chooseMusic_Flexible(songloc, hour, isWeather, isFestival)
+                
+                while pygame.mixer.music.get_busy():
+                    check_sound_triggers()
+                    play_check = check_play_triggers(cts_play, oldHour, True)
+                    if play_check > 0:
+                        fadeout_time = 3000  # milliseconds
+                        pygame.mixer.music.fadeout(fadeout_time)
+                        # Wait fadeout time + 100 ms
+                        sleep(fadeout_time/1000 + .1)
+                        played = False
+                        # Possibly don't need thise played = False to accurately get the
+                        # loop back to playing new music, I just don't want to wait the
+                        # sleep cycle
+                    else:
+                        sleep(2)
                 # If song did not play, new song will be chosen
             oldHour = hour
             lastcheckWeather = False
         sleep(cycle)  # Sleep 10 Seconds
 
+# FIX ME: To solve the problem of the bottom of the hour song constantly fading out
+# Make quarter + half hour always play the etc songs and make that its own function
+# Without a timeout
+
+def check_play_triggers(cts_play, oldHour, playing_status):
+    """ play_check returns:
+    0: 0 is no mode, skip to sleep cycle
+    1: Cts Play
+    2: Play the Top of the Hour
+    3: Play etc Song
+    4: Ring bell toll
+    5: onwards: Not yet used
+    """
+    dt = datetime.now()
+    hour = dt.hour
+    minute = dt.minute
+    play_check = 0
+    if cts_play and not playing_status:
+        if oldHour != hour:
+            play_check = 4
+        else:
+            play_check = 1
+    else:
+        if oldHour != hour or minute == 0:
+            if config.hrly_preferences['ring_bell']:
+                play_check == 4
+            else:
+                play_check = 2
+        elif minute in [15, 30, 45]:
+            play_check = 3
+        else:
+            play_check = 0
+        # Assumption: That cycle is < 60s and that a song length is >60s
+    return play_check
+
+
+def check_sound_triggers():
+    minute = datetime.now().minute
+    fx_fold = 'Music/Resources/effects/'
+    #if True:
+    #    crits = fx_fold + 'critters/'
+    #    ff = [crits + '066.wav', crits + '066.wav', crits + '067.wav', crits + '068.wav']
+    #    print 'playing'
+    #    play_sound(ff)
+
+
+def play_sound(music_file):
+    played = False
+    for i in music_file:
+        if os.path.exists(i):
+            print i
+            soundobj = pygame.mixer.Sound(i)
+            length = soundobj.get_length()
+            soundobj.play()
+            sleep(length + .15)
+            played = True
+            print music_file
+    return played
+
+
+def play_etc_music(f):
+    played = False
+    if os.path.exists(f):
+        pygame.mixer.music.load(f)
+        pygame.mixer.music.play(0)
+        while pygame.mixer.music.get_busy():
+            sleep(2)
+            played = True
+            print f
+    return played
+
 
 def chooseMusic_Rigid(file_loc, hour, isWeather, isFestival, cts):
     """Check festival first, then check weather"""
+    # FIX ME: Need to organize to respond more accurately to cts states
     if cts == 4:
         ring_bell()
+    elif cts == 3:
+        etcfol = file_loc + 'etc/'
+        # Consider: adding a play_sound here
+        musicFile = etcfol + random.choice(os.listdir(etcfol))
+        play_etc_music(musicFile)
     if isFestival != Festival.NONE:
         if isFestival == Festival.KKSLIDER:
             musicFile = 'Music/KK/'
             kksong = random.choice(os.listdir(musicFile))
             musicFile = musicFile + kksong
         else:
-            musicFile = file_loc + 'festival/' + isFestival.value + '.mp3'
+            musicfol = file_loc + 'festival/' + isFestival.value
+            musicFile = musicfol + random.choice(os.listdir(musicfol))
     else:
         # Roll for random chance to play 'etc' song
         etcfol = file_loc + 'etc/'
@@ -112,18 +202,25 @@ def chooseMusic_Rigid(file_loc, hour, isWeather, isFestival, cts):
         if os.path.isdir(etcfol) and len(os.listdir(etcfol)) > 0:
             etcCheck = True
         # Chance arbitrarly set at 10% if etcCheck passes
-        if (etcCheck and ((random.randint(0, 100) < 10) and cts == 1)) or cts == 3:
-            musicFile = etcfol + random.choice(os.listdir(etcfol))
-        else:
-            musicFile = file_loc + isWeather.value + str(hour) + '.mp3'
+        #-------------------------------------------------------
+        # Commented out because I didn't like the random chance of other music playing
+        # I changed it so cts == 3 means play random music on its own timer
+        # not just randomly within every call
+        #if (etcCheck and ((random.randint(0, 100) < 10) and cts == 1)) or cts == 3:
+        #    musicFile = etcfol + random.choice(os.listdir(etcfol))
+        #else:
+        #    # musicFile = file_loc + isWeather.value + str(hour) + '.mp3'
+        #    music_fol = file_loc + isWeather.value + str(hour) + '/'
+        #    musicFile = music_fol + random.choice(os.listdir(music_fol))
+        #-------------------------------------------------------
+        music_fol = file_loc + isWeather.value + str(hour) + '/'
+        musicFile = music_fol + random.choice(os.listdir(music_fol))
     print musicFile
     # Double check if file exists
     if os.path.exists(musicFile):
         # subprocess.Popen(['mpg123', '-q', musicFile]).wait()
         pygame.mixer.music.load(musicFile)
         pygame.mixer.music.play(0)
-        while pygame.mixer.music.get_busy():
-            sleep(1)
         return True
     else:
         print 'Warning: ' + musicFile + ' Does not exist'
@@ -132,6 +229,8 @@ def chooseMusic_Rigid(file_loc, hour, isWeather, isFestival, cts):
 
 def chooseMusic_Flexible(song_loc, hour, isWeather, isFestival):
     _times = config.flexible_defs
+    # flexible_defs are the definitions for how the exact hour correlates to
+    # 'Afternoon', 'Morning', 'Noon', etc
     songfile = ''
     if isFestival is not Festival.NONE:
         song_loc = song_loc + 'Festival/'
@@ -166,7 +265,7 @@ def chooseMusic_Flexible(song_loc, hour, isWeather, isFestival):
 
 def ring_bell():
     """Plays bell tone """
-    file_loc = "Music/Menu/"
+    file_loc = "Music/Resources/Menu/"
     bell_song = file_loc + "belltone.mp3"
     pygame.mixer.music.load(bell_song)
     pygame.mixer.music.play(0)
@@ -174,13 +273,11 @@ def ring_bell():
         sleep(1)
 
 
-def bootupSong(file_loc):
+def bootupSong():
     """Plays a random song in the Menu folder"""
-    file_loc = file_loc + 'Menu/'
+    file_loc = 'Music/Resources/Menu/'
     start_song = file_loc + 'Nintendo.mp3'
-    #start_song = file_loc + random.choice(os.listdir(file_loc))
-    # subprocess.Popen(['mpg123', '-q', start_song]).wait()
-    #sound = pygame.mixer.Sound(start_song)
+    # start_song = file_loc + 'Train_Departure.mp3'
     pygame.mixer.music.load(start_song)
     pygame.mixer.music.play(0)
     while pygame.mixer.music.get_busy():
@@ -220,7 +317,6 @@ def checkFestival(dt):
     harvest_dates = ['2016-11-24']
     festival = Festival.NONE
     # Check for Halloween, Christmas and ...
-    
     if day == 25 and month == 12:
         # It's Festival
         festival = Festival.TOYDAY
