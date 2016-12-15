@@ -29,23 +29,26 @@ class Festival(Enum):
     NONE = 'none'
 
 
-# Global Constants
+# Initialization parameters of the pygame.mixer
 FREQ = 44100
-#FREQ = 32000
 BITSIZE = -16
 CHANNELS = 2
 BUFFER = 4096
 
 
+# Notes:
+# FIX ME: when ETC plays, title keeps getting reprinted over and over for length of song
+
+
 def main():
     musicloc = 'Music/'  # Location of the Musics folder with all the sounds
-    cycle = 3  # Seconds for Checking
+    cycle = 3  # Seconds for Checkings
     cts_play = True  # True for continuous play
     allow_albums = config.albums_allowable
     print 'Loaded in: ' + str(config.albums_allowable)
     pygame.mixer.init(FREQ, BITSIZE, CHANNELS, BUFFER)
     pygame.init()
-    # bootupSong()
+    #bootupSong()
     dto = datetime.now()
     oldHour = dto.hour  # Starts with boot
     lastcheckWeather = False
@@ -56,6 +59,7 @@ def main():
     while 1:  # Infinite Main Loop
         dt = datetime.now()
         hour = dt.hour
+
         minute = dt.minute
         play_check = check_play_triggers(cts_play, oldHour, False)
         if play_check > 0:
@@ -73,12 +77,20 @@ def main():
                 album = random.choice(allow_albums)
                 songloc = musicloc + album + '/'
                 check_rigid = True
-                with open(songloc + 'album_config.txt') as cf_file:
-                    commands = []
+                with open(songloc + 'album_config.txt','r+') as cf_file:
                     read = csvreader(cf_file, delimiter='=', quotechar='|')
                     for i in read:
+                        comm_line = [i[0],i[1]]
                         if 'rigid' in i[0]:
                             check_rigid = i[1].strip()
+                        if 'freq' in i[0]:
+                            freq_set = int(i[1].strip())
+                            _init = pygame.mixer.get_init()
+                            if freq_set != _init[0]:
+                                pygame.mixer.quit()  # Need to quit to reinitialize mixer
+                                pygame.mixer.pre_init(freq_set, _init[1], _init[2])
+                                pygame.mixer.init()
+                                print pygame.mixer.get_init()
                 # FIX ME: A bit of a janky way of implementing album prefs
                 if check_rigid == 'True':
                     played = chooseMusic_Rigid(songloc, hour, isWeather, isFestival, play_check)
@@ -104,9 +116,6 @@ def main():
             lastcheckWeather = False
         sleep(cycle)  # Sleep 10 Seconds
 
-# FIX ME: To solve the problem of the bottom of the hour song constantly fading out
-# Make quarter + half hour always play the etc songs and make that its own function
-# Without a timeout
 
 def check_play_triggers(cts_play, oldHour, playing_status):
     """ play_check returns:
@@ -143,7 +152,7 @@ def check_play_triggers(cts_play, oldHour, playing_status):
 def check_sound_triggers():
     minute = datetime.now().minute
     fx_fold = 'Music/Resources/effects/'
-    #if True:
+    #if True:  # play test, ignore
     #    crits = fx_fold + 'critters/'
     #    ff = [crits + '066.wav', crits + '066.wav', crits + '067.wav', crits + '068.wav']
     #    print 'playing'
@@ -195,7 +204,6 @@ def chooseMusic_Rigid(file_loc, hour, isWeather, isFestival, cts):
             musicfol = file_loc + 'festival/' + isFestival.value
             musicFile = musicfol + random.choice(os.listdir(musicfol))
     else:
-        # Roll for random chance to play 'etc' song
         etcfol = file_loc + 'etc/'
         # Check if etc folder exists and there's music
         etcCheck = False
@@ -215,9 +223,10 @@ def chooseMusic_Rigid(file_loc, hour, isWeather, isFestival, cts):
         #-------------------------------------------------------
         music_fol = file_loc + isWeather.value + str(hour) + '/'
         musicFile = music_fol + random.choice(os.listdir(music_fol))
-    print musicFile
+    # FIX ME: When musicFile returns null, skip
     # Double check if file exists
     if os.path.exists(musicFile):
+        print musicFile
         # subprocess.Popen(['mpg123', '-q', musicFile]).wait()
         pygame.mixer.music.load(musicFile)
         pygame.mixer.music.play(0)
@@ -303,7 +312,7 @@ def checkWeather():
         return Weather.SNOW
     else:
         return Weather.NONE
-
+# FIX ME: Add error exception for when internet disconnects
 
 def checkFestival(dt):
     """Checks festival dates"""
