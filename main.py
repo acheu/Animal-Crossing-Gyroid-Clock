@@ -379,6 +379,8 @@ def signal_handler(signal, frame):
     print 'SIGINT Received, quitting program...'
     try:
         pigpio.cleanup()  # Release GPIO before quitting
+    except:
+        print 'No GPIO to access'
     sys.exit(0)
 
 
