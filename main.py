@@ -56,6 +56,7 @@ def main():
         pigpio.set_PIenable(True)
     except:
         print 'Error: PI possibly not connected'
+        print sys.exc_info()[0]
     musicloc = 'Music/'  # Location of the Musics folder with all the sounds
     cycle = 3  # Seconds for Checkings
     cts_play = True  # True for continuous play
