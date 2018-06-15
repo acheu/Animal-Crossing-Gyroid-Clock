@@ -38,7 +38,7 @@ class gpio_handler:
         return io
 
     def get_RUN(self):
-        print 'Error: RUN pin was not intended to be accessed"
+        print 'Error: RUN pin was not intended to be accessed'
 
     def get_SHTDWN(self):
         io = GPIO.input(self.chanlist(3))
@@ -52,20 +52,20 @@ class gpio_handler:
     def set_PIenable(self,highlow):
         """ Set to Enabled with a highlow == True when program is running """ 
         if highlow:
-            GPIO.output(self.chanlist(4)), GPIO.HIGH)
-        elif !highlow:
-            GPIO.output(self.chanlist(4)), GPIO.LOW)
+            GPIO.output(self.chanlist(4), GPIO.HIGH)
+        elif ~highlow:
+            GPIO.output(self.chanlist(4), GPIO.LOW)
 
 
     def cleanup(self):
         """ closeout function, releases all gpio resources """
         GPIO.cleanup(chanlist)
 
-    def get_chanlist(self)
+    def get_chanlist(self):
         """ Return the chanlist """
         return self.chanlist
 
-    def set_chanlist(self,loc,newchannel)
+    def set_chanlist(self,loc,newchannel):
         """ reformat a channel to another channel """
         # TODO, add checks and illegal arguments to protect Pi
         # TODO actually add the functionality
