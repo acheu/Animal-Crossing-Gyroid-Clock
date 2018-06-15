@@ -376,6 +376,7 @@ def checkFestival(dt):
     return festival
 
 def signal_handler(signal, frame):
+    global pigpio
     print 'SIGINT Received, quitting program...'
     try:
         pigpio.cleanup()  # Release GPIO before quitting
