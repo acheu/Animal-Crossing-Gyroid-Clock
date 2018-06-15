@@ -13,7 +13,7 @@ except ImportError:
 # 37, GPIO 25 --> (4) PIenable (Set)
 
 
-class gpio_handler:
+class gpio_handler(object):
     def __init__(self):
         """ Create object handle for interfacing with RPi Model B GPIO """
         GPIO.setmode(GPIO.BOARD)  # Set's GPIO referencing to RPi Board Refdes

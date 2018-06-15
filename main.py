@@ -13,7 +13,7 @@ import pygame
 import config
 from csv import reader as csvreader
 import check_album
-import gpio_handler
+from gpio_handler import gpio_handler
 
 class Weather(Enum):
     RAIN = 'rain_hour/'
