@@ -1,3 +1,4 @@
+from __future__ import division
 from datetime import datetime
 from enum import Enum
 from socket import error as SocketError
@@ -9,6 +10,8 @@ import subprocess
 import pygame
 import config
 from csv import reader as csvreader
+import check_album
+import gpio_handler
 
 class Weather(Enum):
     RAIN = 'rain_hour/'
@@ -35,6 +38,10 @@ BITSIZE = -16
 CHANNELS = 2
 BUFFER = 4096
 
+global ch1  # global handle for channel 1 for music
+global ch2  # global handle for channel 2 for music
+global mus  # global music handler
+
 
 # Notes:
 # FIX ME: when ETC plays, title keeps getting reprinted over and over for length of song
@@ -45,10 +52,16 @@ def main():
     cycle = 3  # Seconds for Checkings
     cts_play = True  # True for continuous play
     allow_albums = config.albums_allowable
+    tvol = config.time_volume
     print 'Loaded in: ' + str(config.albums_allowable)
     pygame.mixer.init(FREQ, BITSIZE, CHANNELS, BUFFER)
     pygame.init()
-    #bootupSong()
+    global ch1
+    global ch2
+    ch1 = pygame.mixer.Channel(0)  # for music and songs
+    ch2 = pygame.mixer.Channel(1)  # for sound effects
+    pygame.mixer.music.set_volume(tvol[datetime.now().hour]/10)
+    bootupSong()
     dto = datetime.now()
     oldHour = dto.hour  # Starts with boot
     lastcheckWeather = False
@@ -59,7 +72,10 @@ def main():
     while 1:  # Infinite Main Loop
         dt = datetime.now()
         hour = dt.hour
-
+        ch1.set_volume(tvol[hour]/10)
+        ch2.set_volume(tvol[hour]/10)
+        pygame.mixer.music.set_volume(tvol[hour]/10)
+        
         minute = dt.minute
         play_check = check_play_triggers(cts_play, oldHour, False)
         if play_check > 0:
@@ -178,10 +194,10 @@ def play_etc_music(f):
     if os.path.exists(f):
         pygame.mixer.music.load(f)
         pygame.mixer.music.play(0)
+        print f
         while pygame.mixer.music.get_busy():
             sleep(2)
             played = True
-            print f
     return played
 
 
@@ -227,8 +243,8 @@ def chooseMusic_Rigid(file_loc, hour, isWeather, isFestival, cts):
     # Double check if file exists
     if os.path.exists(musicFile):
         print musicFile
-        # subprocess.Popen(['mpg123', '-q', musicFile]).wait()
         pygame.mixer.music.load(musicFile)
+        # subprocess.Popen(['mpg123', '-q', musicFile]).wait()
         pygame.mixer.music.play(0)
         return True
     else:
@@ -296,13 +312,14 @@ def bootupSong():
 def checkWeather():
     """Python Open Weather Map"""
     # City Hardcoded into this. Can change later with API call
-    city = 'Atlanta,us'
+    
+    city = 'Jersey City,us'
     try:
         # Key provided free on openweathermap.org
         owm = pyowm.OWM('7fcf1a61a3f873475c5d8ea070c6454b')
         weather = owm.weather_at_place(city).get_weather()
         status = weather.get_status()
-    except SocketError:
+    except:
         print 'Socket Closed Error'
         status = Weather.NONE
         return status
