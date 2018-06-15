@@ -4,6 +4,8 @@ from enum import Enum
 from socket import error as SocketError
 from time import sleep
 import os
+import sys
+import signal
 import pyowm
 import random
 import subprocess
@@ -41,13 +43,19 @@ BUFFER = 4096
 global ch1  # global handle for channel 1 for music
 global ch2  # global handle for channel 2 for music
 global mus  # global music handler
-
+global pigpio  # GPIO Object handle
 
 # Notes:
 # FIX ME: when ETC plays, title keeps getting reprinted over and over for length of song
 
 
 def main():
+    global pigpio
+    try:
+        pigpio = gpio_handler()
+        pigpio.set_PIenable(True)
+    except:
+        print 'Error: PI possibly not connected'
     musicloc = 'Music/'  # Location of the Musics folder with all the sounds
     cycle = 3  # Seconds for Checkings
     cts_play = True  # True for continuous play
@@ -69,6 +77,7 @@ def main():
     isFestival = Festival.NONE
     day_check = []  # Assumption: There'll never be a day []
     play_check = 0
+    signal.signal(signal.SIGINT, signal_handler)
     while 1:  # Infinite Main Loop
         dt = datetime.now()
         hour = dt.hour
@@ -365,6 +374,13 @@ def checkFestival(dt):
     else:
         festival = Festival.NONE
     return festival
+
+def signal_handler(signal, frame):
+    print 'SIGINT Received, quitting program...'
+    try:
+        pigpio.cleanup()  # Release GPIO before quitting
+    sys.exit(0)
+
 
 if __name__ == "__main__":
     main()
