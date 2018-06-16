@@ -59,7 +59,7 @@ class gpio_handler(object):
 
     def cleanup(self):
         """ closeout function, releases all gpio resources """
-        GPIO.cleanup(chanlist)
+        GPIO.cleanup(self.chanlist)
 
     def get_chanlist(self):
         """ Return the chanlist """
