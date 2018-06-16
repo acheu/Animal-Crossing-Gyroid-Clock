@@ -130,7 +130,7 @@ def main():
                     check_sound_triggers()
                     play_check = check_play_triggers(cts_play, oldHour, True)
                     if pigpio.SHTDWN:
-                        raise KeyboardInterrupt  # Close out of program
+                        signal_handler(signal.SIGINT, 0)
                     elif play_check > 0:
                         fadeout_time = 3000  # milliseconds
                         pygame.mixer.music.fadeout(fadeout_time)
@@ -295,8 +295,6 @@ def chooseMusic_Flexible(song_loc, hour, isWeather, isFestival):
         pygame.mixer.music.load(song_loc)
         pygame.mixer.music.play(0)
         print 'Playing: ' + songfile
-        while pygame.mixer.music.get_busy():
-            sleep(1)
         return True
     else:
         print 'Warning: ' + song_loc + ' Does not exist'
