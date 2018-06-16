@@ -31,8 +31,8 @@ class gpio_handler(object):
         io = GPIO.input(self.chanlist[3])
         return io
 
-    def callback_SHTDWN(self):
-        print('SHTDWN Command Toggled')
+    def callback_SHTDWN(channel):
+        print 'SHTDWN Command Toggled'
         return True
     
 
