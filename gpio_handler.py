@@ -33,7 +33,7 @@ class gpio_handler(object):
 
     def callback_SHTDWN(self,channel):
         print 'SHTDWN Command Toggled'
-        return True
+        return 66
     
 
     def set_PIenable(self,highlow):
