@@ -386,7 +386,11 @@ def signal_handler(signal, frame):
         pigpio.cleanup()  # Release GPIO before quitting
     except:
         print 'No GPIO to access'
-    sys.exit(0)
+    if frame == 0:
+        # Frame == 0 is specially passed by daughter board
+        os.system("shutdown now -h")
+    else:
+        sys.exit(0)
 
 
 if __name__ == "__main__":
