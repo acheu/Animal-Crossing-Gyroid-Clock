@@ -32,6 +32,7 @@ class gpio_handler(object):
         return io
 
     def callback_SHTDWN(self,channel):
+        # Send shutdown command
         print 'SHTDWN Command Toggled'
         # raise KeyboardInterrupt
         self.SHTDWN = True
