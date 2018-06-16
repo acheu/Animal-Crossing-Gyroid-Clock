@@ -54,7 +54,7 @@ def main():
     try:
         pigpio = gpio_handler()
         pigpio.set_PIenable(True)  # Set running pin TRUE for daughter board
-        signal.signal(pigpio.callback_SHTDWN, signal_handler)  # Signal interrupt if button on daughter board is pressed
+        # signal.signal(pigpio.callback_SHTDWN, signal_handler)  # Signal interrupt if button on daughter board is pressed
     except:
         print 'Error: PI possibly not connected'
         print sys.exc_info()[0]
