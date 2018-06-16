@@ -53,7 +53,8 @@ def main():
     global pigpio
     try:
         pigpio = gpio_handler()
-        pigpio.set_PIenable(True)
+        pigpio.set_PIenable(True)  # Set running pin TRUE for daughter board
+        signal.signal(pigpio.callback_SHTDWN, signal_handler)  # Signal interrupt if button on daughter board is pressed
     except:
         print 'Error: PI possibly not connected'
         print sys.exc_info()[0]
@@ -71,6 +72,8 @@ def main():
     ch2 = pygame.mixer.Channel(1)  # for sound effects
     pygame.mixer.music.set_volume(tvol[datetime.now().hour]/10)
     bootupSong()
+    # TODO, play bootupsong as a sound effect, which will allow the bootup process to continue
+    # Then add a wait condition for if/when bootupsong is done playing
     dto = datetime.now()
     oldHour = dto.hour  # Starts with boot
     lastcheckWeather = False
