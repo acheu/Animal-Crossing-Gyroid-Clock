@@ -24,24 +24,24 @@ class gpio_handler(object):
         GPIO.setup(35, GPIO.IN)  # Setup as input
         GPIO.setup(37, GPIO.OUT)  # Setup as output from pi
 
-        GPIO.add_event_detect(self.chanlist(1), GPIO.BOTH)
-        GPIO.add_event_detect(self.chanlist(3), GPIO.FALLING)
+        GPIO.add_event_detect(self.chanlist[1], GPIO.BOTH)
+        GPIO.add_event_detect(self.chanlist[3], GPIO.FALLING)
 
     
 
     def get_Spare(self):
-        io = GPIO.input(self.chanlist(0))
+        io = GPIO.input(self.chanlist[0])
         return io
 
     def get_Volume(self):
-        io = GPIO.input(self.chanlist(1))
+        io = GPIO.input(self.chanlist[1])
         return io
 
     def get_RUN(self):
         print 'Error: RUN pin was not intended to be accessed'
 
     def get_SHTDWN(self):
-        io = GPIO.input(self.chanlist(3))
+        io = GPIO.input(self.chanlist[3])
         return io
 
     def callback_SHTDWN(self):
@@ -52,9 +52,9 @@ class gpio_handler(object):
     def set_PIenable(self,highlow):
         """ Set to Enabled with a highlow == True when program is running """ 
         if highlow:
-            GPIO.output(self.chanlist(4), GPIO.HIGH)
+            GPIO.output(self.chanlist[4], GPIO.HIGH)
         elif ~highlow:
-            GPIO.output(self.chanlist(4), GPIO.LOW)
+            GPIO.output(self.chanlist[4], GPIO.LOW)
 
 
     def cleanup(self):
