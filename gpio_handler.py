@@ -14,19 +14,6 @@ except ImportError:
 
 
 class gpio_handler(object):
-    def __init__(self):
-        """ Create object handle for interfacing with RPi Model B GPIO """
-        GPIO.setmode(GPIO.BOARD)  # Set's GPIO referencing to RPi Board Refdes
-        self.chanlist = [29, 31, 33, 35, 37]  # chanlist 0, 1, 2, 3, 4
-        GPIO.setup(29, GPIO.IN)  # Setup as input to pi
-        GPIO.setup(31, GPIO.IN)  # Setup as input
-        GPIO.setup(33, GPIO.IN)  # Setup as input
-        GPIO.setup(35, GPIO.IN)  # Setup as input
-        GPIO.setup(37, GPIO.OUT)  # Setup as output from pi
-
-        GPIO.add_event_detect(self.chanlist[1], GPIO.BOTH)  
-        GPIO.add_event_detect(self.chanlist[3], GPIO.FALLING, callback=callback_SHTDWN, bouncetime=200)
-
     
 
     def get_Spare(self):
@@ -67,8 +54,19 @@ class gpio_handler(object):
         # TODO, add checks and illegal arguments to protect Pi
         # TODO actually add the functionality
         # self.chanlist(loc) = newchannel
-        
-    
+            
+    def __init__(self):
+        """ Create object handle for interfacing with RPi Model B GPIO """
+        GPIO.setmode(GPIO.BOARD)  # Set's GPIO referencing to RPi Board Refdes
+        self.chanlist = [29, 31, 33, 35, 37]  # chanlist 0, 1, 2, 3, 4
+        GPIO.setup(29, GPIO.IN)  # Setup as input to pi
+        GPIO.setup(31, GPIO.IN)  # Setup as input
+        GPIO.setup(33, GPIO.IN)  # Setup as input
+        GPIO.setup(35, GPIO.IN)  # Setup as input
+        GPIO.setup(37, GPIO.OUT)  # Setup as output from pi
+
+        GPIO.add_event_detect(self.chanlist[1], GPIO.BOTH)  
+        GPIO.add_event_detect(self.chanlist[3], GPIO.FALLING, GPIO.callback=callback_SHTDWN, bouncetime=200)
 
 
     
