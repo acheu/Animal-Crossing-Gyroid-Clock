@@ -31,7 +31,7 @@ class gpio_handler(object):
         io = GPIO.input(self.chanlist[3])
         return io
 
-    def callback_SHTDWN(channel):
+    def callback_SHTDWN(self.channel):
         print 'SHTDWN Command Toggled'
         return True
     
@@ -66,7 +66,7 @@ class gpio_handler(object):
         GPIO.setup(37, GPIO.OUT)  # Setup as output from pi
 
         GPIO.add_event_detect(self.chanlist[1], GPIO.BOTH)  
-        GPIO.add_event_detect(self.chanlist[3], GPIO.FALLING, callback=callback_SHTDWN, bouncetime=200)
+        GPIO.add_event_detect(self.chanlist[3], GPIO.FALLING, self.callback_SHTDWN, bouncetime=200)
 
 
     
