@@ -51,10 +51,7 @@ class gpio_handler(object):
 
     def set_PIenable(self,highlow):
         """ Set to Enabled with a highlow == True when program is running """ 
-        if highlow:
-            GPIO.output(self.chanlist[4], GPIO.HIGH)
-        elif ~highlow:
-            GPIO.output(self.chanlist[4], GPIO.LOW)
+        GPIO.output(self.chanlist[4], highlow)
 
 
     def cleanup(self):
