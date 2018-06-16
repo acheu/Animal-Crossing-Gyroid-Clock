@@ -129,7 +129,9 @@ def main():
                 while pygame.mixer.music.get_busy():
                     check_sound_triggers()
                     play_check = check_play_triggers(cts_play, oldHour, True)
-                    if play_check > 0:
+                    if pigpio.SHTDWN:
+                        raise KeyboardInterrupt  # Close out of program
+                    elif play_check > 0:
                         fadeout_time = 3000  # milliseconds
                         pygame.mixer.music.fadeout(fadeout_time)
                         # Wait fadeout time + 100 ms

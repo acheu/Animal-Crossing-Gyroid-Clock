@@ -33,7 +33,8 @@ class gpio_handler(object):
 
     def callback_SHTDWN(self,channel):
         print 'SHTDWN Command Toggled'
-        raise KeyboardInterrupt
+        # raise KeyboardInterrupt
+        self.SHTDWN = True
     
 
     def set_PIenable(self,highlow):
@@ -64,6 +65,7 @@ class gpio_handler(object):
         GPIO.setup(33, GPIO.IN)  # Setup as input
         GPIO.setup(35, GPIO.IN)  # Setup as input
         GPIO.setup(37, GPIO.OUT)  # Setup as output from pi
+        self.SHTDWN = False
 
         GPIO.add_event_detect(self.chanlist[1], GPIO.BOTH)  
         GPIO.add_event_detect(self.chanlist[3], GPIO.FALLING, self.callback_SHTDWN, bouncetime=200)
