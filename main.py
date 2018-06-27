@@ -54,6 +54,7 @@ def main():
     try:
         pigpio = gpio_handler()
         pigpio.set_PIenable(True)  # Set running pin TRUE for daughter board
+        pigpio.set_Speaker_SHTDWN(True)  # Turn on Speaker
         # signal.signal(pigpio.callback_SHTDWN, signal_handler)  # Signal interrupt if button on daughter board is pressed
     except:
         print 'Error: PI possibly not connected'
@@ -94,7 +95,7 @@ def main():
         if play_check > 0:
             if dt.minute > 55 or not lastcheckWeather:
                 # Checks Weather, returns 'none', 'snow', or 'rain'
-                isWeather = checkWeather()
+                isWeather = checkWeather(config.location)  # Check weather at location
                 lastcheckWeather = True
             if day_check != dt.day:
                 # Checks for festivals like Christmas, KK, etc
@@ -124,7 +125,7 @@ def main():
                 if check_rigid == 'True':
                     played = chooseMusic_Rigid(songloc, hour, isWeather, isFestival, play_check)
                 else:
-                    played = chooseMusic_Flexible(songloc, hour, isWeather, isFestival)
+                    played = chooseMusic_Flexible(songloc, hour, isWeather, isFestival, play_check)
                 
                 while pygame.mixer.music.get_busy():
                     check_sound_triggers()
@@ -267,12 +268,16 @@ def chooseMusic_Rigid(file_loc, hour, isWeather, isFestival, cts):
         return False
 
 
-def chooseMusic_Flexible(song_loc, hour, isWeather, isFestival):
+def chooseMusic_Flexible(song_loc, hour, isWeather, isFestival, cts):
     _times = config.flexible_defs
     # flexible_defs are the definitions for how the exact hour correlates to
     # 'Afternoon', 'Morning', 'Noon', etc
     songfile = ''
-    if isFestival is not Festival.NONE:
+    if cts == 3:
+        song_loc = song_loc + 'etc/'
+        # Consider: adding a play_sound here
+        songfile = random.choice(os.listdir(song_loc))
+    elif isFestival is not Festival.NONE:
         song_loc = song_loc + 'Festival/'
         songfile = random.choice(os.listdir(song_loc))
     elif hour in _times['Morning']:
@@ -322,11 +327,10 @@ def bootupSong():
         sleep(1)
 
 
-def checkWeather():
-    """Python Open Weather Map"""
-    # City Hardcoded into this. Can change later with API call
+def checkWeather(city):
+    """Python Open Weather Map, pass it string of city,country"""
     
-    city = 'Jersey City,us'
+    #city = 'Jersey City,us'
     try:
         # Key provided free on openweathermap.org
         owm = pyowm.OWM('7fcf1a61a3f873475c5d8ea070c6454b')
@@ -382,13 +386,16 @@ def checkFestival(dt):
 def signal_handler(signal, frame):
     global pigpio
     print 'SIGINT Received, quitting program...'
+    #pygame.mixer.music.fadeout(3000)  # Fade music out at 3000 ms
+    pygame.mixer.quit()
+    print 'Quiting Pygame Mixer...'
     try:
         pigpio.cleanup()  # Release GPIO before quitting
     except:
         print 'No GPIO to access'
     if frame == 0:
         # Frame == 0 is specially passed by daughter board
-        os.system("shutdown now -h")
+        os.system("sudo shutdown now -h")
     else:
         sys.exit(0)
 
