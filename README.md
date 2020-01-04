@@ -34,4 +34,6 @@ Install Dependancies
 >sudo pip install pyyaml
 >sudo apt-get install python-pygame
 
+Move Music
+>scp myfile.tar.gz pi@192.168.1.x:
 
