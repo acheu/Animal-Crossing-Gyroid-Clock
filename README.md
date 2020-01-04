@@ -1,5 +1,8 @@
-# Animal-Crossing-Gyroid-Clock
+# Animal-Crossing-Gyroid-Clock version 2A
 A Raspberry PI music player that attempts to recreate the animal crossing soundtrack by playing music associated with the time and weather, by Alex Cheu
+
+Version Gyroid_2A corresponds to development version for Raspberry Pi Zero W adding additional functions of user turning on/off custom album settings as well as improvements to the music selection
+2A corresponds to breadboard while Gyroid 2B will correspond to printed board
 
 
 Setup gpio pwm function 2 for audio
