@@ -35,5 +35,7 @@ Install Dependancies
 >sudo apt-get install python-pygame
 
 Move Music
+>mkdir Animal-Crossing-Gyroid-Clock/Music
+from other computer...
 >scp myfile.tar.gz pi@192.168.1.x:
 
